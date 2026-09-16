@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MaxPF Ranking</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0E1712; --panel:#16241C; --panel-2:#1C2E22; --line:#2A3F30;
+    --ink:#F2F5EC; --muted:#8FA394; --gold:#E7B92C; --green:#4FA36A;
+    --green-bright:#7FD494; --red:#C1442C; --amber:#D98E2A;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--ink); font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased;}
+  .display{font-family:'Bebas Neue',sans-serif; letter-spacing:0.02em;}
+  .wrap{max-width:880px; margin:0 auto; padding:26px 18px 70px;}
+
+  header{display:flex; justify-content:space-between; align-items:flex-end; border-bottom:3px solid var(--gold); padding-bottom:12px; margin-bottom:18px; gap:14px; flex-wrap:wrap;}
+  .wordmark{font-size:44px; line-height:0.85;}
+  .wordmark span{color:var(--gold);}
+  .tagline{color:var(--muted); font-size:12px; margin-top:4px; font-weight:500;}
+
+  .controls{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px; align-items:center;}
+  input{background:var(--panel); border:1px solid var(--line); color:var(--ink); padding:9px 11px; border-radius:3px; font-family:'Inter'; font-size:13px;}
+  input#userInput{flex:1; min-width:160px;}
+  button{font-family:'Inter'; font-weight:700; font-size:13px; border:1.5px solid var(--line); background:var(--panel); color:var(--ink); padding:9px 14px; border-radius:3px; cursor:pointer;}
+  button:hover{border-color:var(--gold);}
+  button.primary{background:var(--gold); color:#1a1305; border-color:var(--gold);}
+  button.primary:hover{background:#f0c548;}
+  button:disabled{opacity:0.5; cursor:default;}
+
+  .status{color:var(--muted); font-size:12px; margin-bottom:16px; min-height:16px;}
+  .progress-bar-bg{height:5px; background:var(--panel-2); border-radius:3px; overflow:hidden; margin-bottom:8px;}
+  .progress-bar-fill{height:100%; background:var(--gold); transition:width .2s;}
+
+  .section-title{font-family:'Bebas Neue'; font-size:24px; letter-spacing:0.02em; margin:26px 0 10px; display:flex; align-items:center; gap:8px;}
+  .section-title.top{color:var(--green-bright);}
+  .section-title.bottom{color:#e08268;}
+
+  .league-card{background:var(--panel); border:1px solid var(--line); border-radius:4px; padding:13px 16px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;}
+  .league-card.top-card{border-left:3px solid var(--green-bright);}
+  .league-card.bottom-card{border-left:3px solid var(--red);}
+  .league-info{flex:1; min-width:180px;}
+  .league-name{font-weight:700; font-size:14px; margin-bottom:3px;}
+  .league-meta{color:var(--muted); font-size:11px;}
+  .league-stats{display:flex; gap:18px; align-items:center;}
+  .stat{text-align:center;}
+  .stat-label{font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:0.03em; font-weight:700;}
+  .stat-value{font-family:'Bebas Neue'; font-size:22px;}
+  .rank-badge{font-family:'Bebas Neue'; font-size:26px; min-width:56px; text-align:center; padding:4px 8px; border-radius:4px;}
+  .rank-badge.top{background:rgba(127,212,148,0.15); color:var(--green-bright);}
+  .rank-badge.bottom{background:rgba(193,68,44,0.18); color:#e08268;}
+
+  table{width:100%; border-collapse:collapse; margin-top:8px; font-size:12px;}
+  th{text-align:left; color:var(--muted); font-size:10px; text-transform:uppercase; letter-spacing:0.03em; padding:6px 8px; border-bottom:1px solid var(--line);}
+  td{padding:7px 8px; border-bottom:1px solid var(--line);}
+  tr:hover td{background:var(--panel-2);}
+  .empty-msg{color:var(--muted); font-size:13px; padding:24px 0; text-align:center;}
+  details{margin-top:24px; background:var(--panel); border:1px solid var(--line); border-radius:4px; padding:12px 16px;}
+  summary{cursor:pointer; font-weight:700; font-size:13px; color:var(--gold);}
+  .error-box{background:rgba(193,68,44,0.12); border:1px solid var(--red); border-radius:4px; padding:12px 14px; font-size:12px; margin-bottom:16px; color:#f0c9c0;}
+  footer{margin-top:30px; text-align:center; color:var(--muted); font-size:11px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <div class="wordmark">MAX<span>PF</span> RANKING</div>
+      <div class="tagline">onde você é elite e onde tá deixando pontos no banco</div>
+    </div>
+  </header>
+
+  <div class="controls">
+    <input type="text" id="userInput" placeholder="username ou user_id do Sleeper" value="jperocco">
+    <input type="text" id="seasonInput" placeholder="temporada" value="2026" style="width:90px;">
+    <button class="primary" id="btnLoad">Carregar</button>
+    <button id="btnRefresh" style="display:none;">🔄 Atualizar</button>
+  </div>
+
+  <div class="status" id="status"></div>
+  <div class="progress-bar-bg" id="progressWrap" style="display:none;"><div class="progress-bar-fill" id="progressFill" style="width:0%"></div></div>
+
+  <div id="results"></div>
+</div>
+
+<script>
+const BASE = 'https://api.sleeper.app/v1';
+let lastResults = null;
+
+function statusMsg(msg){ document.getElementById('status').textContent = msg; }
+
+async function resolveUserId(input){
+  // If it's already numeric-looking (Sleeper IDs are long numbers), try as user_id first via API anyway,
+  // since the /user/{id_or_username} endpoint accepts both.
+  const res = await fetch(`${BASE}/user/${encodeURIComponent(input)}`);
+  if(!res.ok) throw new Error('Usuário não encontrado no Sleeper: ' + input);
+  const data = await res.json();
+  if(!data || !data.user_id) throw new Error('Usuário não encontrado no Sleeper: ' + input);
+  return data.user_id;
+}
+
+async function fetchLeagues(userId, season){
+  const res = await fetch(`${BASE}/user/${userId}/leagues/nfl/${season}`);
+  if(!res.ok) throw new Error('Falha ao buscar ligas.');
+  return res.json();
+}
+
+async function fetchRosters(leagueId){
+  const res = await fetch(`${BASE}/league/${leagueId}/rosters`);
+  if(!res.ok) throw new Error('Falha ao buscar rosters da liga ' + leagueId);
+  return res.json();
+}
+
+function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
+
+async function loadAll(){
+  const userInput = document.getElementById('userInput').value.trim();
+  const season = document.getElementById('seasonInput').value.trim() || '2026';
+  if(!userInput){ statusMsg('Digite um username ou user_id.'); return; }
+
+  document.getElementById('btnLoad').disabled = true;
+  document.getElementById('results').innerHTML = '';
+  statusMsg('Resolvendo usuário...');
+
+  try{
+    const userId = await resolveUserId(userInput);
+    statusMsg('Buscando suas ligas de ' + season + '...');
+    const leagues = await fetchLeagues(userId, season);
+
+    if(!leagues || leagues.length === 0){
+      statusMsg('');
+      document.getElementById('results').innerHTML = `<div class="empty-msg">Nenhuma liga encontrada pra esse usuário em ${season}.</div>`;
+      document.getElementById('btnLoad').disabled = false;
+      return;
+    }
+
+    const progressWrap = document.getElementById('progressWrap');
+    const progressFill = document.getElementById('progressFill');
+    progressWrap.style.display = 'block';
+
+    const leagueResults = [];
+    let done = 0;
+
+    for(const league of leagues){
+      statusMsg(`Carregando ${league.name}... (${done+1}/${leagues.length})`);
+      try{
+        const rosters = await fetchRosters(league.league_id);
+        const totalTeams = rosters.length;
+
+        const myRoster = rosters.find(r => r.owner_id === userId || (r.co_owners && r.co_owners.includes(userId)));
+
+        if(myRoster && myRoster.settings){
+          const ppts = (myRoster.settings.ppts || 0) + (myRoster.settings.ppts_decimal || 0)/100;
+          const fpts = (myRoster.settings.fpts || 0) + (myRoster.settings.fpts_decimal || 0)/100;
+
+          // rank by ppts descending among all rosters that have settings
+          const sorted = rosters
+            .filter(r => r.settings)
+            .map(r => (r.settings.ppts || 0) + (r.settings.ppts_decimal || 0)/100)
+            .sort((a,b) => b - a);
+          const rank = sorted.findIndex(v => v <= ppts + 0.001) + 1;
+
+          leagueResults.push({
+            name: league.name,
+            leagueId: league.league_id,
+            ppts, fpts, rank, totalTeams,
+            gap: ppts - fpts,
+          });
+        }
+      }catch(e){
+        console.error('Erro na liga', league.name, e);
+      }
+      done++;
+      progressFill.style.width = (done / leagues.length * 100) + '%';
+      await sleep(120); // gentil com a API, evita rajada
+    }
+
+    progressWrap.style.display = 'none';
+    statusMsg(`${leagueResults.length} de ${leagues.length} ligas carregadas com sucesso.`);
+
+    lastResults = { userId, season, leagueResults, fetchedAt: Date.now() };
+    try{
+      await window.storage.set('maxpf_last_' + userId + '_' + season, JSON.stringify(lastResults), false);
+    }catch(e){ console.warn('Não consegui salvar cache', e); }
+
+    renderResults(leagueResults);
+    document.getElementById('btnRefresh').style.display = 'inline-block';
+
+  }catch(err){
+    statusMsg('');
+    document.getElementById('results').innerHTML = `<div class="error-box">Erro: ${err.message}</div>`;
+  }
+  document.getElementById('btnLoad').disabled = false;
+}
+
+function renderResults(leagueResults){
+  if(leagueResults.length === 0){
+    document.getElementById('results').innerHTML = '<div class="empty-msg">Nenhum resultado pra mostrar.</div>';
+    return;
+  }
+
+  const sorted = [...leagueResults].sort((a,b) => a.rank - b.rank);
+  const top4 = sorted.slice(0, 4);
+  const bottom4 = sorted.slice(-4).reverse();
+  const middle = sorted.slice(4, -4);
+
+  const cardHtml = (item, kind) => `
+    <div class="league-card ${kind}-card">
+      <div class="league-info">
+        <div class="league-name">${item.name}</div>
+        <div class="league-meta">${item.totalTeams} times · rank ${item.rank}º</div>
+      </div>
+      <div class="league-stats">
+        <div class="stat">
+          <div class="stat-label">MaxPF</div>
+          <div class="stat-value">${item.ppts.toFixed(1)}</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">PF real</div>
+          <div class="stat-value" style="color:var(--muted); font-size:18px;">${item.fpts.toFixed(1)}</div>
+        </div>
+        <div class="rank-badge ${kind}">#${item.rank}</div>
+      </div>
+    </div>
+  `;
+
+  let html = '';
+  html += `<div class="section-title top">🔥 Top 4 — melhor MaxPF relativo</div>`;
+  html += top4.map(i => cardHtml(i, 'top')).join('');
+
+  html += `<div class="section-title bottom">💀 Bottom 4 — pior MaxPF relativo</div>`;
+  html += bottom4.map(i => cardHtml(i, 'bottom')).join('');
+
+  html += `
+    <details>
+      <summary>Ver todas as ${leagueResults.length} ligas (ordenadas por rank)</summary>
+      <table>
+        <thead><tr><th>Liga</th><th>Rank</th><th>MaxPF</th><th>PF real</th><th>Deixado no banco</th></tr></thead>
+        <tbody>
+          ${sorted.map(i => `
+            <tr>
+              <td>${i.name}</td>
+              <td>${i.rank}/${i.totalTeams}</td>
+              <td>${i.ppts.toFixed(1)}</td>
+              <td>${i.fpts.toFixed(1)}</td>
+              <td>${i.gap.toFixed(1)}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </details>
+  `;
+
+  document.getElementById('results').innerHTML = html;
+}
+
+async function tryLoadCache(){
+  const userInput = document.getElementById('userInput').value.trim();
+  const season = document.getElementById('seasonInput').value.trim() || '2026';
+  if(!userInput) return;
+  try{
+    // we don't know the resolved user_id yet without a call, so just attempt with raw input as key guess is unreliable;
+    // simplest: skip cache pre-resolve, user clicks "Carregar" once per session.
+  }catch(e){}
+}
+
+document.getElementById('btnLoad').addEventListener('click', loadAll);
+document.getElementById('btnRefresh').addEventListener('click', loadAll);
+document.getElementById('userInput').addEventListener('keydown', e => { if(e.key === 'Enter') loadAll(); });
+</script>
+</body>
+</html>

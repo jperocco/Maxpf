@@ -53,6 +53,52 @@
   .rank-badge.top{background:rgba(127,212,148,0.15); color:var(--green-bright);}
   .rank-badge.bottom{background:rgba(193,68,44,0.18); color:#e08268;}
 
+  .card-wrap{margin-bottom:8px;}
+  .toggle-btn{
+    width:100%; text-align:left; background:var(--panel-2); border:1px solid var(--line); border-top:none;
+    color:var(--muted); font-size:11px; font-weight:700; padding:6px 16px; cursor:pointer; border-radius:0 0 4px 4px;
+    display:flex; justify-content:space-between; align-items:center;
+  }
+  .toggle-btn:hover{color:var(--gold);}
+  .toggle-btn .arrow{transition:transform .15s;}
+  .toggle-btn.open .arrow{transform:rotate(180deg);}
+  .league-detail{
+    display:none; max-height:220px; overflow-y:auto; background:#0B120D; border:1px solid var(--line); border-top:none;
+    border-radius:0 0 4px 4px; padding:4px 0;
+  }
+  .league-detail.open{display:block;}
+  .detail-row{display:flex; justify-content:space-between; align-items:center; padding:6px 16px; font-size:12px; border-bottom:1px solid var(--line);}
+  .detail-row:last-child{border-bottom:none;}
+  .detail-row.has-pick{background:rgba(231,185,44,0.08);}
+  .detail-row .drank{color:var(--muted); width:26px; font-weight:700;}
+  .detail-row .dname{flex:1; padding:0 8px;}
+  .detail-row.has-pick .dname{color:var(--gold); font-weight:700;}
+  .detail-row .pick-tag{font-size:10px; color:var(--gold); font-weight:700; margin-left:6px;}
+  .detail-row .dppts{font-family:'Bebas Neue'; font-size:15px; width:60px; text-align:right;}
+  .detail-row .dfpts{color:var(--muted); font-size:11px; width:60px; text-align:right;}
+
+  .detail-row-grid{
+    display:grid; grid-template-columns:2fr 60px 70px 70px 90px; gap:8px;
+    padding:7px 8px; font-size:12px; border-bottom:1px solid var(--line); align-items:center;
+  }
+  .detail-row-grid:last-child{border-bottom:none;}
+  .detail-row-grid.has-pick{background:rgba(231,185,44,0.08);}
+  .detail-row-grid .cname{display:flex; align-items:center; gap:6px;}
+  .detail-row-grid.has-pick .cname{color:var(--gold); font-weight:700;}
+  .detail-row-grid .pick-tag{font-size:10px; color:var(--gold); font-weight:700;}
+  .detail-row-grid .cmaxpf{font-family:'Bebas Neue'; font-size:15px;}
+  .detail-row-grid .cpfreal{color:var(--muted); font-size:12px;}
+
+  .picks-block{padding:10px 16px; border-top:1px solid var(--line);}
+  .picks-title{font-size:10px; text-transform:uppercase; letter-spacing:0.03em; color:var(--muted); font-weight:700; margin-bottom:6px;}
+  .pick-chip{
+    display:inline-flex; align-items:center; gap:4px; background:rgba(231,185,44,0.15); color:var(--gold);
+    border:1px solid rgba(231,185,44,0.4); border-radius:3px; padding:4px 9px; font-size:12px; font-weight:700;
+    margin:0 6px 6px 0;
+  }
+  .pick-chip .via{color:var(--muted); font-weight:500; font-size:11px;}
+  .picks-empty{color:var(--muted); font-size:12px; font-style:italic;}
+
   table{width:100%; border-collapse:collapse; margin-top:8px; font-size:12px;}
   th{text-align:left; color:var(--muted); font-size:10px; text-transform:uppercase; letter-spacing:0.03em; padding:6px 8px; border-bottom:1px solid var(--line);}
   td{padding:7px 8px; border-bottom:1px solid var(--line);}
@@ -60,6 +106,22 @@
   .empty-msg{color:var(--muted); font-size:13px; padding:24px 0; text-align:center;}
   details{margin-top:24px; background:var(--panel); border:1px solid var(--line); border-radius:4px; padding:12px 16px;}
   summary{cursor:pointer; font-weight:700; font-size:13px; color:var(--gold);}
+
+  .compact-row-wrap{border-bottom:1px solid var(--line);}
+  .compact-row{
+    display:grid; grid-template-columns:2fr 60px 70px 70px 90px;
+    gap:8px; padding:9px 8px; font-size:12px; cursor:pointer; align-items:center;
+  }
+  .compact-row:hover{background:var(--panel-2);}
+  .compact-row .cname{display:flex; align-items:center; gap:6px;}
+  .compact-row .carrow{font-size:9px; color:var(--muted); transition:transform .15s;}
+  .compact-row.open .carrow{transform:rotate(180deg); color:var(--gold);}
+  .compact-th{
+    display:grid; grid-template-columns:2fr 60px 70px 70px 90px; gap:8px;
+    padding:6px 8px; font-size:10px; text-transform:uppercase; letter-spacing:0.03em;
+    color:var(--muted); font-weight:700; border-bottom:1px solid var(--line);
+  }
+  .compact-row .league-detail{margin:0 -8px;}
   .error-box{background:rgba(193,68,44,0.12); border:1px solid var(--red); border-radius:4px; padding:12px 14px; font-size:12px; margin-bottom:16px; color:#f0c9c0;}
   footer{margin-top:30px; text-align:center; color:var(--muted); font-size:11px;}
 </style>
@@ -114,6 +176,21 @@ async function fetchRosters(leagueId){
   return res.json();
 }
 
+async function fetchUsers(leagueId){
+  const res = await fetch(`${BASE}/league/${leagueId}/users`);
+  if(!res.ok) throw new Error('Falha ao buscar usuários da liga ' + leagueId);
+  return res.json();
+}
+
+async function fetchTradedPicks(leagueId){
+  const res = await fetch(`${BASE}/league/${leagueId}/traded_picks`);
+  if(!res.ok) throw new Error('Falha ao buscar picks trocadas da liga ' + leagueId);
+  return res.json();
+}
+
+const leagueTeamsMap = {}; // leagueId -> [{name, ppts, fpts, isMe}]
+const leaguePicksMap = {}; // leagueId -> [{season, viaName}]  (só as 1as que são minhas)
+
 function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
 
 async function loadAll(){
@@ -147,27 +224,60 @@ async function loadAll(){
     for(const league of leagues){
       statusMsg(`Carregando ${league.name}... (${done+1}/${leagues.length})`);
       try{
-        const rosters = await fetchRosters(league.league_id);
+        const [rosters, users, tradedPicks] = await Promise.all([
+          fetchRosters(league.league_id),
+          fetchUsers(league.league_id),
+          fetchTradedPicks(league.league_id).catch(() => []), // liga pode não ter picks (best ball etc)
+        ]);
         const totalTeams = rosters.length;
 
-        const myRoster = rosters.find(r => r.owner_id === userId || (r.co_owners && r.co_owners.includes(userId)));
+        const nameFor = (ownerId) => {
+          const u = users.find(u => u.user_id === ownerId);
+          if(!u) return 'Time sem dono';
+          return (u.metadata && u.metadata.team_name) ? u.metadata.team_name : u.display_name;
+        };
 
-        if(myRoster && myRoster.settings){
-          const ppts = (myRoster.settings.ppts || 0) + (myRoster.settings.ppts_decimal || 0)/100;
-          const fpts = (myRoster.settings.fpts || 0) + (myRoster.settings.fpts_decimal || 0)/100;
+        // roster_id -> owner_id, pra achar de quem é cada 1ª do ano seguinte
+        const rosterIdToOwnerId = {};
+        rosters.forEach(r => { rosterIdToOwnerId[r.roster_id] = r.owner_id; });
 
-          // rank by ppts descending among all rosters that have settings
-          const sorted = rosters
-            .filter(r => r.settings)
-            .map(r => (r.settings.ppts || 0) + (r.settings.ppts_decimal || 0)/100)
-            .sort((a,b) => b - a);
-          const rank = sorted.findIndex(v => v <= ppts + 0.001) + 1;
+        const baseSeason = parseInt(season, 10);
+        const targetSeason = String(baseSeason + 1); // sempre a próxima temporada
+
+        // pra cada roster ORIGINAL (1..N), quem é o dono atual da 1ª dele na próxima temporada
+        const myPick1stRosterIds = new Set();
+        for(let rid = 1; rid <= totalTeams; rid++){
+          const trade = tradedPicks.find(p =>
+            String(p.season) === targetSeason && p.round === 1 && p.roster_id === rid
+          );
+          const currentOwnerRosterId = trade ? trade.owner_id : rid;
+          const currentOwnerUserId = rosterIdToOwnerId[currentOwnerRosterId];
+          if(currentOwnerUserId === userId){
+            myPick1stRosterIds.add(rid); // rid = de qual time ORIGINAL essa 1ª saiu
+          }
+        }
+
+        const withSettings = rosters.filter(r => r.settings);
+        const allTeams = withSettings.map(r => {
+          const ppts = (r.settings.ppts || 0) + (r.settings.ppts_decimal || 0)/100;
+          const fpts = (r.settings.fpts || 0) + (r.settings.fpts_decimal || 0)/100;
+          const isMe = r.owner_id === userId || (r.co_owners && r.co_owners.includes(userId));
+          const hasMyPick = myPick1stRosterIds.has(r.roster_id); // eu tenho a 1ª que originalmente é desse time
+          return { name: nameFor(r.owner_id), ppts, fpts, isMe, hasMyPick };
+        }).sort((a,b) => b.ppts - a.ppts);
+
+        const myEntry = allTeams.find(t => t.isMe);
+
+        if(myEntry){
+          const rank = allTeams.findIndex(t => t.isMe) + 1;
+          leagueTeamsMap[league.league_id] = allTeams;
+          leaguePicksMap[league.league_id] = { season: targetSeason };
 
           leagueResults.push({
             name: league.name,
             leagueId: league.league_id,
-            ppts, fpts, rank, totalTeams,
-            gap: ppts - fpts,
+            ppts: myEntry.ppts, fpts: myEntry.fpts, rank, totalTeams,
+            gap: myEntry.ppts - myEntry.fpts,
           });
         }
       }catch(e){
@@ -208,22 +318,29 @@ function renderResults(leagueResults){
   const middle = sorted.slice(4, -4);
 
   const cardHtml = (item, kind) => `
-    <div class="league-card ${kind}-card">
-      <div class="league-info">
-        <div class="league-name">${item.name}</div>
-        <div class="league-meta">${item.totalTeams} times · rank ${item.rank}º</div>
-      </div>
-      <div class="league-stats">
-        <div class="stat">
-          <div class="stat-label">MaxPF</div>
-          <div class="stat-value">${item.ppts.toFixed(1)}</div>
+    <div class="card-wrap">
+      <div class="league-card ${kind}-card">
+        <div class="league-info">
+          <div class="league-name">${item.name}</div>
+          <div class="league-meta">${item.totalTeams} times · rank ${item.rank}º</div>
         </div>
-        <div class="stat">
-          <div class="stat-label">PF real</div>
-          <div class="stat-value" style="color:var(--muted); font-size:18px;">${item.fpts.toFixed(1)}</div>
+        <div class="league-stats">
+          <div class="stat">
+            <div class="stat-label">MaxPF</div>
+            <div class="stat-value">${item.ppts.toFixed(1)}</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">PF real</div>
+            <div class="stat-value" style="color:var(--muted); font-size:18px;">${item.fpts.toFixed(1)}</div>
+          </div>
+          <div class="rank-badge ${kind}">#${item.rank}</div>
         </div>
-        <div class="rank-badge ${kind}">#${item.rank}</div>
       </div>
+      <button class="toggle-btn" onclick="toggleLeague('${item.leagueId}', this)">
+        <span>Ver liga completa (${item.totalTeams} times)</span>
+        <span class="arrow">▾</span>
+      </button>
+      <div class="league-detail" id="detail-${item.leagueId}"></div>
     </div>
   `;
 
@@ -237,20 +354,21 @@ function renderResults(leagueResults){
   html += `
     <details>
       <summary>Ver todas as ${leagueResults.length} ligas (ordenadas por rank)</summary>
-      <table>
-        <thead><tr><th>Liga</th><th>Rank</th><th>MaxPF</th><th>PF real</th><th>Deixado no banco</th></tr></thead>
-        <tbody>
-          ${sorted.map(i => `
-            <tr>
-              <td>${i.name}</td>
-              <td>${i.rank}/${i.totalTeams}</td>
-              <td>${i.ppts.toFixed(1)}</td>
-              <td>${i.fpts.toFixed(1)}</td>
-              <td>${i.gap.toFixed(1)}</td>
-            </tr>
-          `).join('')}
-        </tbody>
-      </table>
+      <div class="compact-th">
+        <span>Liga</span><span>Rank</span><span>MaxPF</span><span>PF real</span><span>No banco</span>
+      </div>
+      ${sorted.map(i => `
+        <div class="compact-row-wrap">
+          <div class="compact-row" onclick="toggleCompactRow('${i.leagueId}', this)">
+            <span class="cname"><span class="carrow">▾</span>${i.name}</span>
+            <span>${i.rank}/${i.totalTeams}</span>
+            <span>${i.ppts.toFixed(1)}</span>
+            <span>${i.fpts.toFixed(1)}</span>
+            <span>${i.gap.toFixed(1)}</span>
+          </div>
+          <div class="league-detail" id="detail-table-${i.leagueId}"></div>
+        </div>
+      `).join('')}
     </details>
   `;
 
@@ -265,6 +383,53 @@ async function tryLoadCache(){
     // we don't know the resolved user_id yet without a call, so just attempt with raw input as key guess is unreliable;
     // simplest: skip cache pre-resolve, user clicks "Carregar" once per session.
   }catch(e){}
+}
+
+function toggleCompactRow(leagueId, rowEl){
+  const detail = document.getElementById('detail-table-' + leagueId);
+  const isOpen = detail.classList.contains('open');
+
+  if(!isOpen && detail.innerHTML === ''){
+    const teams = leagueTeamsMap[leagueId] || [];
+    const pickInfo = leaguePicksMap[leagueId];
+    const pickSeason = pickInfo ? pickInfo.season : '';
+
+    detail.innerHTML = teams.map((t, i) => `
+      <div class="detail-row-grid ${t.hasMyPick ? 'has-pick' : ''}">
+        <span class="cname">${i+1}º ${t.name}${t.isMe ? ' (você)' : ''}${t.hasMyPick ? `<span class="pick-tag">🥇 sua 1ª ${pickSeason}</span>` : ''}</span>
+        <span></span>
+        <span class="cmaxpf">${t.ppts.toFixed(1)}</span>
+        <span class="cpfreal">${t.fpts.toFixed(1)}</span>
+        <span></span>
+      </div>
+    `).join('');
+  }
+
+  detail.classList.toggle('open');
+  rowEl.classList.toggle('open');
+}
+
+function toggleLeague(leagueId, btn){
+  const detail = document.getElementById('detail-' + leagueId);
+  const isOpen = detail.classList.contains('open');
+
+  if(!isOpen && detail.innerHTML === ''){
+    const teams = leagueTeamsMap[leagueId] || [];
+    const pickInfo = leaguePicksMap[leagueId];
+    const pickSeason = pickInfo ? pickInfo.season : '';
+
+    detail.innerHTML = teams.map((t, i) => `
+      <div class="detail-row ${t.hasMyPick ? 'has-pick' : ''}">
+        <span class="drank">${i+1}º</span>
+        <span class="dname">${t.name}${t.isMe ? ' (você)' : ''}${t.hasMyPick ? `<span class="pick-tag">🥇 sua 1ª ${pickSeason}</span>` : ''}</span>
+        <span class="dppts">${t.ppts.toFixed(1)}</span>
+        <span class="dfpts">real ${t.fpts.toFixed(1)}</span>
+      </div>
+    `).join('');
+  }
+
+  detail.classList.toggle('open');
+  btn.classList.toggle('open');
 }
 
 document.getElementById('btnLoad').addEventListener('click', loadAll);
